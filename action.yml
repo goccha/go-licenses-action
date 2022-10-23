@@ -1,0 +1,40 @@
+name: "go-licenses-action"
+description: "Install go-licenses and run a license check"
+author: "goccha"
+inputs:
+  allowed_licenses:
+    description: "allow only specific license names"
+    required: false
+  disallowed_types:
+    description: "disallowed license types"
+    required: false
+  ignore:
+    description: "specify package path prefixes to be ignored."
+    required: false
+  vendor:
+    description: "vendor directory enable/disable"
+    default: disable
+    required: false
+
+runs:
+  using: "composite"
+  steps:
+    - name: Set up Go 1.19.2
+      uses: actions/setup-go@v3
+      with:
+        go-version: 1.19.2
+        cache: true
+
+    - name: Install go-licenses
+      run: go install github.com/google/go-licenses@latest
+      shell: bash
+
+    - name: Run mod vendor
+      if : inputs.vendor == 'enable'
+      run: go mod vendor
+      shell: bash
+
+    - name: Run check
+      run:
+        go-licenses check ./... --allowed_licenses=${{ inputs.allowed_licenses }} --disallowed_types=${{ inputs.disallowed_types }} --ignore=${{ inputs.ignore }}
+      shell: bash
